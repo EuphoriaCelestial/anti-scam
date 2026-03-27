@@ -44,7 +44,7 @@ Open http://localhost:5000
 docker-compose up --build
 ```
 
-Open http://localhost:5000
+Open http://localhost:8080
 
 ---
 
