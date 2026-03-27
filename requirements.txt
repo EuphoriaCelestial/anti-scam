@@ -1,0 +1,6 @@
+flask>=3.0
+pandas
+PyJWT>=2.0
+Werkzeug>=3.0
+# Optional - for PostgreSQL:
+psycopg2-binary

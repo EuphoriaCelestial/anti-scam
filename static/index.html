@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuizMaster</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=Roboto+Condensed:wght@700&family=Space+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0a0a0f;--surface:#13131c;--surface2:#1c1c2e;--border:#2a2a40;
+    --accent:#e8ff47;--accent2:#7c3aed;--accent3:#06b6d4;
+    --text:#f0f0f8;--muted:#6b6b8a;--danger:#ef4444;--success:#22c55e;
+    --radius:12px;--transition:0.2s ease;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{padding-bottom:60px;padding-top:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+  
+  /* ── Layout ── */
+  .screen{display:none;min-height:100vh;animation:fadeIn .3s ease;padding-top:130px;}
+  .screen.active{display:flex;flex-direction:column;}
+  .screen.active > *:not(.app-footer){flex-shrink:0;}
+  .screen.active .app-footer{margin-top:auto;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  
+  /* ── Typography ── */
+  h1,h2{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;}
+  
+  /* ── Buttons ── */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;transition:all var(--transition);}
+  .btn-primary{background:var(--accent);color:#0a0a0f;}
+  .btn-primary:hover{background:#d4eb00;transform:translateY(-1px);}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-danger:hover{background:#dc2626;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text);}
+  .btn-icon{background:transparent;border:none;cursor:pointer;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:6px;transition:all var(--transition);}
+  .btn-icon:hover{color:var(--danger);background:rgba(239,68,68,.1);}
+  .btn-full{width:100%;justify-content:center;}
+  
+  /* ── Inputs ── */
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 16px;width:100%;transition:border-color var(--transition);}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  input::placeholder{color:var(--muted);}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+  .form-group{margin-bottom:16px;}
+  
+  /* ── Cards ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+  
+  /* ── Toast ── */
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+  .toast-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:14px;max-width:320px;animation:slideIn .25s ease;display:flex;align-items:center;gap:10px;}
+  .toast-item.success{border-color:var(--success);}
+  .toast-item.error{border-color:var(--danger);}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  
+  /* ── Modal ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:90%;max-width:540px;max-height:90vh;overflow-y:auto;}
+  .modal h2{font-size:28px;margin-bottom:20px;}
+  .modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 1 — Auth */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-auth{align-items:center;justify-content:center;background:radial-gradient(ellipse at 60% 10%,rgba(124,58,237,.15) 0%,transparent 60%),var(--bg);}
+  .auth-box{width:100%;max-width:800px;padding:0 24px;}
+  .auth-logo{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.02em;font-family:'Roboto Condensed',sans-serif;color:var(--accent);text-align:center;margin-bottom:8px;line-height:1.25;}
+  .auth-tagline{text-align:center;color:var(--muted);font-size:14px;margin-bottom:40px;}
+  .auth-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px;margin-bottom:24px;}
+  .auth-tab{flex:1;text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted);transition:all var(--transition);}
+  .auth-tab.active{background:var(--accent);color:#0a0a0f;}
+  .auth-form{display:none;}
+  .auth-form.active{display:block;}
+  .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:13px;}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 2 — Admin */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-admin{flex-direction:column;}
+  .admin-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+  .admin-header h1{font-size:32px;color:var(--accent);}
+  .admin-body{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;overflow:hidden;}
+  .admin-panel{padding:24px;overflow-y:auto;height:calc(100vh - 65px);}
+  .admin-panel:first-child{border-right:1px solid var(--border);}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
+  .panel-header h2{font-size:24px;}
+  .panel-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .question-item{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;transition:border-color var(--transition);}
+  .question-item:hover{border-color:var(--accent2);}
+  .question-text{flex:1;}
+  .question-text p{font-size:14px;color:var(--text);line-height:1.5;}
+  .question-text small{color:var(--success);font-size:12px;font-family:'Space Mono',monospace;}
+  .question-item .actions{display:flex;gap:4px;flex-shrink:0;}
+  .file-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;}
+  .file-item .file-icon{font-size:24px;}
+  .file-item .file-info{flex:1;min-width:0;}
+  .file-info p{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .file-info small{color:var(--muted);font-size:12px;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;font-family:'Space Mono',monospace;}
+  .badge-pdf{background:rgba(239,68,68,.2);color:#f87171;}
+  .badge-video{background:rgba(6,182,212,.2);color:#22d3ee;}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 3 — Home */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-home{align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 80%,rgba(124,58,237,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(6,182,212,.08) 0%,transparent 50%),var(--bg);}
+  .home-inner{text-align:center;width:100%;max-width:800px;padding:0 24px;}
+  .home-logo{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.02em;font-family:'Roboto Condensed',sans-serif;color:var(--accent);line-height:1.25;}
+  .home-sub{color:var(--muted);margin-bottom:16px;font-size:15px;}
+  .home-user{background:var(--surface);border:1px solid var(--border);border-radius:999px;display:inline-flex;align-items:center;gap:8px;padding:6px 16px;font-size:13px;margin-bottom:40px;}
+  .home-user span{color:var(--accent);font-weight:700;}
+  .home-menu{display:flex;flex-direction:column;gap:14px;margin-bottom:32px;}
+  .menu-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 28px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:18px;transition:all var(--transition);color:var(--text);}
+  .menu-btn:hover{border-color:var(--accent);background:var(--surface2);transform:translateX(4px);}
+  .menu-btn .icon{font-size:28px;width:48px;text-align:center;}
+  .menu-btn .label{font-size:18px;font-weight:700;}
+  .menu-btn .sublabel{font-size:13px;color:var(--muted);}
+  .home-logout{color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;background:none;border:none;}
+  .home-logout:hover{color:var(--text);}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 4 — Quiz */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-quiz{align-items:center;justify-content:flex-start;padding-top:20px;}
+  .quiz-container{width:100%;max-width:680px;padding:0 16px 40px;}
+  .quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+  .quiz-progress{font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);}
+  .quiz-progress strong{color:var(--accent);font-size:18px;}
+  .quiz-timer{font-family:'Space Mono',monospace;font-size:20px;color:var(--accent3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 16px;}
+  .progress-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:32px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease;}
+  .question-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px;margin-bottom:24px;}
+  .question-num{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+  .question-card h2{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:700;line-height:1.5;}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .answer-btn{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);transition:all var(--transition);line-height:1.4;}
+  .answer-btn:hover:not(:disabled){border-color:var(--accent2);background:rgba(124,58,237,.1);}
+  .answer-btn.correct{border-color:var(--success)!important;background:rgba(34,197,94,.15)!important;color:var(--success)!important;}
+  .answer-btn.wrong{border-color:var(--danger)!important;background:rgba(239,68,68,.15)!important;color:var(--danger)!important;}
+  .answer-btn:disabled{cursor:not-allowed;}
+  .tf-btn{font-size:20px;font-weight:800;text-align:center;padding:28px;}
+  .quiz-score{font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);}
+  
+  /* Result overlay */
+  .result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn .4s ease;}
+  .result-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:48px;text-align:center;max-width:460px;width:90%;}
+  .result-emoji{font-size:72px;margin-bottom:16px;}
+  .result-card h2{font-size:48px;color:var(--accent);margin-bottom:8px;}
+  .result-card p{color:var(--muted);font-size:16px;margin-bottom:24px;line-height:1.6;}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 5 — High Score */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-scores{align-items:center;padding-top:40px;}
+  .scores-container{width:100%;max-width:600px;padding:0 16px 40px;}
+  .scores-header{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
+  .scores-header h1{font-size:48px;}
+  .score-table{width:100%;border-collapse:separate;border-spacing:0 6px;}
+  .score-table th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:0 16px 8px;font-family:'Space Mono',monospace;}
+  .score-row td{padding:14px 16px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .score-row td:first-child{border-left:1px solid var(--border);border-radius:var(--radius) 0 0 var(--radius);}
+  .score-row td:last-child{border-right:1px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;}
+  .rank-badge{font-family:'Bebas Neue',sans-serif;font-size:22px;width:36px;text-align:center;}
+  .rank-1{color:gold;} .rank-2{color:silver;} .rank-3{color:#cd7f32;}
+  .score-val{font-family:'Space Mono',monospace;font-size:16px;color:var(--accent);font-weight:700;}
+  .time-val{font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);}
+  
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  /* SCREEN 6 — Library */
+  /* ─────────────────────────────────────────────────────────────────────────── */
+  #screen-library{flex-direction:column;padding:0;}
+  .library-header-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+  .library-header-bar h1{font-size:32px;color:var(--accent);}
+  .lib-body{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;}
+  .lib-panel{padding:24px;overflow-y:auto;height:calc(100vh - 65px);}
+  .lib-panel:first-child{border-right:1px solid var(--border);}
+  .lib-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .lib-panel-header h2{font-size:24px;}
+  .lib-file-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:border-color var(--transition);}
+  .lib-file-item:hover{border-color:var(--accent);}
+  .lib-file-item .file-icon{font-size:22px;flex-shrink:0;}
+  .lib-file-item .file-name{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  @media(max-width:640px){.lib-body{grid-template-columns:1fr;}.lib-panel:first-child{border-right:none;border-bottom:1px solid var(--border);}}
+  .lib-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all var(--transition);text-align:center;}
+  .lib-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+  .lib-card .lib-icon{font-size:40px;margin-bottom:12px;}
+  .lib-card p{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
+  
+  /* PDF/Video viewer modal */
+  .viewer-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:2000;flex-direction:column;}
+  .viewer-modal.open{display:flex;}
+  .viewer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border);}
+  .viewer-body{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .viewer-body iframe,.viewer-body video{width:100%;height:100%;border:none;border-radius:var(--radius);}
+  
+  /* ── Logos ── */
+  .logos-bar{
+    position:fixed;top:0;left:0;right:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;
+    background:rgba(10,10,15,.7);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    z-index:300;
+    pointer-events:none;
+  }
+  .logos-left{display:flex;align-items:center;gap:14px;}
+  .logos-bar img{height:75px;width:75px;object-fit:contain;opacity:.95;}
+  .logos-right{display:flex;flex-direction:row;align-items:center;gap:14px;flex-wrap:nowrap;}
+  .logos-right-text{text-align:left;line-height:1.5;}
+  .logos-right-text p{font-size:13px;font-weight:700;color:rgba(255,255,255,.9);white-space:nowrap;}
+  .logos-right-text p:first-child{font-size:14px;color:var(--accent);}
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  
+  /* ── Responsive ── */
+  @media(max-width:640px){
+    .admin-body{grid-template-columns:1fr;}
+    .admin-panel:first-child{border-right:none;border-bottom:1px solid var(--border);}
+    .answers{grid-template-columns:1fr;}
+    .home-logo{font-size:56px;}
+  }
+  
+  .empty-state{text-align:center;padding:40px 16px;color:var(--muted);}
+  .empty-state .empty-icon{font-size:48px;margin-bottom:12px;}
+  .spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  
+  /* ── Footer ── */
+  .app-footer{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:12px;border-top:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--muted);line-height:1.8;z-index:100;}
+  .app-footer span{color:var(--accent);font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 1 — AUTH
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="logos-bar">
+  <div class="logos-left">
+    <img src="/assets/logo1.png" alt="LHPN"/>
+    <img src="/assets/logo2.png" alt="Đoàn TN"/>
+  </div>
+  <div class="logos-right">
+    <img src="/assets/logo3.png" alt="Công An"/>
+    <div class="logos-right-text">
+      <p>CÔNG AN PHƯỜNG AN HỘI TÂY</p>
+      <p>CHI ĐOÀN CÔNG AN</p>
+    </div>
+  </div>
+</div>
+
+<div id="screen-auth" class="screen active">
+  <div class="auth-box">
+    <div class="auth-logo">CẢNH BÁO CÁC CHIÊU TRÒ<br>LỪA ĐẢO QUA KHÔNG GIAN MẠNG</div>
+    <p class="auth-tagline">Kiểm tra kiến thức an toàn trên không gian mạng.</p>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Đăng Nhập</div>
+      <div class="auth-tab" onclick="switchTab('register')">Đăng Ký</div>
+    </div>
+
+    <!-- Login -->
+    <div id="form-login" class="auth-form active">
+      <div class="form-group">
+        <label>Số Điện Thoại</label>
+        <input id="login-phone" type="text" placeholder="Số điện thoại của bạn"/>
+      </div>
+      <div class="form-group">
+        <label>Mật Khẩu</label>
+        <input id="login-pass" type="password" placeholder="Mật khẩu của bạn" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Đăng Nhập →</button>
+      <div class="divider">hoặc đăng nhập với tư cách quản trị viên</div>
+      <div class="form-group">
+        <label>Tên Đăng Nhập Admin</label>
+        <input id="login-admin-user" type="text"/>
+      </div>
+      <div class="form-group">
+        <label>Mật Khẩu Admin</label>
+        <input id="login-admin-pass" type="password" onkeydown="if(event.key==='Enter')doLogin(true)"/>
+      </div>
+      <button class="btn btn-secondary btn-full" onclick="doLogin(true)">Đăng Nhập Admin →</button>
+    </div>
+
+    <!-- Register -->
+    <div id="form-register" class="auth-form">
+      <div class="form-group">
+        <label>Họ và Tên</label>
+        <input id="reg-name" type="text" placeholder="Họ và tên của bạn"/>
+      </div>
+      <div class="form-group">
+        <label>Số Điện Thoại</label>
+        <input id="reg-phone" type="text" placeholder="Số điện thoại (dùng để đăng nhập)"/>
+      </div>
+      <div class="form-group">
+        <label>Địa Chỉ</label>
+        <input id="reg-address" type="text" placeholder="Địa chỉ của bạn (không bắt buộc)"/>
+      </div>
+      <div class="form-group">
+        <label>Mật Khẩu</label>
+        <input id="reg-pass" type="password" placeholder="Chọn mật khẩu bất kỳ"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">Tạo Tài Khoản →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 2 — ADMIN
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <div class="admin-header">
+    <h1>⚡ QUẢN TRỊ</h1>
+    <button class="btn btn-ghost" onclick="doLogout()">Đăng Xuất →</button>
+  </div>
+  <div class="admin-body">
+    <!-- Câus panel -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h2>📚 Câu Hỏi</h2>
+        <div class="panel-actions">
+          <button class="btn btn-secondary" onclick="openModal('modal-add-q')">+ Thêm</button>
+          <button class="btn btn-secondary" onclick="openModal('modal-upload-csv')">⬆ CSV</button>
+          <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑 Xóa Tất Cả</button>
+        </div>
+      </div>
+      <div id="admin-questions-list"></div>
+    </div>
+    <!-- Files panel -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h2>📁 Thư Viện</h2>
+        <div class="panel-actions">
+          <button class="btn btn-secondary" onclick="triggerUpload('pdf')">⬆ PDF</button>
+          <button class="btn btn-secondary" onclick="triggerUpload('video')">⬆ Video</button>
+        </div>
+      </div>
+      <div id="admin-files-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 3 — HOME
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="home-inner">
+    <div class="home-logo">CẢNH BÁO CÁC CHIÊU TRÒ<br>LỪA ĐẢO QUA KHÔNG GIAN MẠNG</div>
+    <p class="home-sub">Sẵn sàng thể hiện kiến thức của bạn?</p>
+    <div class="home-user">👤 Đang chơi với tên <span id="home-player-name">-</span></div>
+    <div class="home-menu">
+      <button class="menu-btn" onclick="showScreen('quiz')">
+        <div class="icon">🎮</div>
+        <div>
+          <div class="label">Bắt Đầu Trò Chơi</div>
+          <div class="sublabel">10 câu hỏi ngẫu nhiên · đua với thời gian</div>
+        </div>
+      </button>
+      <button class="menu-btn" onclick="showScreen('scores')">
+        <div class="icon">🏆</div>
+        <div>
+          <div class="label">Bảng Xếp Hạng</div>
+          <div class="sublabel">Top 20 người chơi xuất sắc nhất</div>
+        </div>
+      </button>
+      <button class="menu-btn" onclick="showScreen('library')">
+        <div class="icon">📖</div>
+        <div>
+          <div class="label">Thư Viện</div>
+          <div class="sublabel">Tài liệu PDF và video</div>
+        </div>
+      </button>
+    </div>
+    <button class="home-logout" onclick="doLogout()">Đăng Xuất</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 4 — QUIZ
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <div>
+        <div class="quiz-progress">Câu <strong id="q-num">1</strong> trên <strong id="q-total">10</strong></div>
+        <div class="quiz-score" id="q-score-display">Điểm: 0</div>
+      </div>
+      <div class="quiz-timer" id="quiz-timer">00:00</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="question-num" id="question-num-label">Câu 1</div>
+      <h2 id="question-text">Đang tải…</h2>
+    </div>
+    <div class="answers" id="answers-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 5 — HIGH SCORES
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-scores" class="screen">
+  <div class="scores-container">
+    <div class="scores-header">
+      <button class="btn btn-ghost" onclick="showScreen('home')">← Quay Lại</button>
+      <h1>🏆 BẢNG XẾP HẠNG</h1>
+    </div>
+    <table class="score-table">
+      <thead><tr><th>#</th><th>Người Chơi</th><th>Điểm</th><th>Thời Gian</th></tr></thead>
+      <tbody id="scores-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SCREEN 6 — LIBRARY
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-library" class="screen">
+  <div class="library-header-bar">
+    <h1>📖 THƯ VIỆN</h1>
+    <button class="btn btn-ghost" onclick="showScreen('home')">← Quay Lại</button>
+  </div>
+  <div class="lib-body">
+    <div class="lib-panel">
+      <div class="lib-panel-header">
+        <h2>📄 Tài Liệu</h2>
+      </div>
+      <div id="lib-pdf-grid"></div>
+    </div>
+    <div class="lib-panel">
+      <div class="lib-panel-header">
+        <h2>🎬 Video</h2>
+      </div>
+      <div id="lib-video-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     VIEWER MODAL
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="viewer-modal" class="viewer-modal">
+  <div class="viewer-header">
+    <span id="viewer-title" style="font-weight:700;font-size:16px;"></span>
+    <button class="btn btn-ghost" onclick="closeViewer()">✕ Đóng</button>
+  </div>
+  <div class="viewer-body" id="viewer-body"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════════════════════════════ -->
+<!-- Add Câu -->
+<div id="modal-add-q" class="modal-overlay">
+  <div class="modal">
+    <h2>Thêm Câu Hỏi</h2>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+      <input type="checkbox" id="aq-istf" onchange="toggleWrongFields('aq')" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;"/>
+      <label style="margin:0;text-transform:none;font-size:14px;color:var(--text);">Câu hỏi Đúng / Sai</label>
+    </div>
+    <div class="form-group"><label>Câu Hỏi</label><textarea id="aq-question" rows="3" placeholder="Nhập câu hỏi…"></textarea></div>
+    <div class="form-group"><label>✅ Đáp Án Đúng</label><input id="aq-correct" type="text" placeholder="Đáp án đúng"/></div>
+    <div class="form-group"><label>❌ Đáp Án Sai 1</label><input id="aq-w1" type="text"/></div>
+    <div id="aq-extra-wrongs"><div class="form-group"><label>❌ Đáp Án Sai 2</label><input id="aq-w2" type="text"/></div>
+    <div class="form-group"><label>❌ Đáp Án Sai 3</label><input id="aq-w3" type="text"/></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-q')">Hủy</button>
+      <button class="btn btn-primary" onclick="submitAddQuestion()">Lưu →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Câu -->
+<div id="modal-edit-q" class="modal-overlay">
+  <div class="modal">
+    <h2>Chỉnh Sửa Câu Hỏi</h2>
+    <input type="hidden" id="eq-id"/>
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+      <input type="checkbox" id="eq-istf" onchange="toggleWrongFields('eq')" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;"/>
+      <label style="margin:0;text-transform:none;font-size:14px;color:var(--text);">Câu hỏi Đúng / Sai</label>
+    </div>
+    <div class="form-group"><label>Câu Hỏi</label><textarea id="eq-question" rows="3"></textarea></div>
+    <div class="form-group"><label>✅ Đáp Án Đúng</label><input id="eq-correct" type="text"/></div>
+    <div class="form-group"><label>❌ Đáp Án Sai 1</label><input id="eq-w1" type="text"/></div>
+    <div id="eq-extra-wrongs"><div class="form-group"><label>❌ Đáp Án Sai 2</label><input id="eq-w2" type="text"/></div>
+    <div class="form-group"><label>❌ Đáp Án Sai 3</label><input id="eq-w3" type="text"/></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-q')">Hủy</button>
+      <button class="btn btn-primary" onclick="submitEditQuestion()">Cập Nhật →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload CSV -->
+<div id="modal-upload-csv" class="modal-overlay">
+  <div class="modal">
+    <h2>Upload Câus CSV</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.7;">
+      Định dạng CSV: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:'Space Mono',monospace;font-size:12px;">question, correct_answer, wrong1, wrong2, wrong3</code><br/>
+      Hàng đầu tiên có thể là tiêu đề (sẽ được bỏ qua nếu không phải câu hỏi).
+    </p>
+    <div class="form-group">
+      <label>File CSV</label>
+      <input id="csv-file-input" type="file" accept=".csv"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-upload-csv')">Hủy</button>
+      <button class="btn btn-primary" onclick="submitCSV()">Tải Lên →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div id="modal-confirm" class="modal-overlay">
+  <div class="modal">
+    <h2 id="confirm-title">Bạn có chắc không?</h2>
+    <p id="confirm-msg" style="color:var(--muted);margin-bottom:24px;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Hủy</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Xác Nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file inputs for admin uploads -->
+<input type="file" id="upload-pdf-input" accept=".pdf" style="display:none" onchange="uploadFile('pdf',this)"/>
+<input type="file" id="upload-video-input" accept="video/*" style="display:none" onchange="uploadFile('video',this)"/>
+
+<!-- Footer -->
+<footer class="app-footer">
+  <div>🎓 Thử thách bản thân · Leo lên bảng xếp hạng · Không ngừng học hỏi</div>
+  <div>© 2025 <span>QuizMaster</span> · Built with passion and a lot trên ctrênfee ☕</div>
+</footer>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const state = {
+  token: localStorage.getItem('qm_token') || null,
+  role:  localStorage.getItem('qm_role')  || null,
+  name:  localStorage.getItem('qm_name')  || null,
+  prevScreen: 'home',
+
+  // Quiz
+  questions: [],
+  currentQ: 0,
+  score: 0,
+  timerInterval: null,
+  elapsed: 0,
+  answered: false,
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════════════════════
+async function api(method, path, body=null, isForm=false){
+  const opts = {
+    method,
+    headers: { Authorization: `Bearer ${state.token}` }
+  };
+  if(body && !isForm){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  if(body && isForm){ opts.body = body; }
+  const res = await fetch('/api'+path, opts);
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════════════
+function toast(msg, type='info'){
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span><span>${msg}</span>`;
+  t.appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCREEN ROUTING
+// ═══════════════════════════════════════════════════════════════════════════
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(`screen-${name}`).classList.add('active');
+  if(name==='admin')    loadAdminData();
+  if(name==='scores')   loadScores();
+  if(name==='library')  loadLibrary();
+  if(name==='quiz')     startQuiz();
+  if(name==='home'||name==='auth') {} // nothing extra
+  if(!['auth','quiz'].includes(name)) state.prevScreen = name;
+}
+
+function goBack(){ showScreen(state.prevScreen==='quiz'?'home':state.prevScreen); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById(`form-${tab}`).classList.add('active');
+}
+
+async function doLogin(isAdmin=false){
+  try{
+    let username, password;
+    if(isAdmin){
+      username = document.getElementById('login-admin-user').value.trim();
+      password = document.getElementById('login-admin-pass').value;
+    } else {
+      username = document.getElementById('login-phone').value.trim();
+      password = document.getElementById('login-pass').value;
+    }
+    if(!username||!password){ toast('Vui lòng điền đầy đủ thông tin','error'); return; }
+    const res = await api('POST','/login',{username,password});
+    state.token = res.token; state.role = res.role; state.name = res.name;
+    localStorage.setItem('qm_token',res.token);
+    localStorage.setItem('qm_role',res.role);
+    localStorage.setItem('qm_name',res.name);
+    toast(`Chào mừng, ${res.name}!`,'success');
+    if(res.role==='admin') showScreen('admin');
+    else { document.getElementById('home-player-name').textContent=res.name; showScreen('home'); }
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function doRegister(){
+  try{
+    const name    = document.getElementById('reg-name').value.trim();
+    const phone   = document.getElementById('reg-phone').value.trim();
+    const address = document.getElementById('reg-address').value.trim();
+    const password= document.getElementById('reg-pass').value;
+    if(!name||!phone||!password){ toast('Họ tên, số điện thoại và mật khẩu là bắt buộc','error'); return; }
+    await api('POST','/register',{name,phone,address,password});
+    toast('Tạo tài khoản thành công! Vui lòng đăng nhập.','success');
+    switchTab('login');
+    document.getElementById('login-phone').value = phone;
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function doLogout(){
+  state.token=state.role=state.name=null;
+  localStorage.removeItem('qm_token');
+  localStorage.removeItem('qm_role');
+  localStorage.removeItem('qm_name');
+  showScreen('auth');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN — QUESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+let adminQuestions=[];
+async function loadAdminData(){
+  await Promise.all([loadAdminQuestions(), loadAdminFiles()]);
+}
+
+async function loadAdminQuestions(){
+  try{
+    adminQuestions = await api('GET','/questions');
+    const el = document.getElementById('admin-questions-list');
+    if(!adminQuestions.length){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><p>Chưa có câu hỏi nào</p></div>';
+      return;
+    }
+    el.innerHTML = adminQuestions.map(q=>`
+      <div class="question-item">
+        <div class="question-text">
+          <p>${escHtml(q.question)}</p>
+          <small>✓ ${escHtml(q.correct_answer)} &nbsp;<span style="font-size:10px;background:${(q.question_type||'multiple')==='truefalse'?'rgba(6,182,212,.2)':'rgba(124,58,237,.2)'};color:${(q.question_type||'multiple')==='truefalse'?'#22d3ee':'#a78bfa'};padding:1px 6px;border-radius:4px;">${(q.question_type||'multiple')==='truefalse'?'Đ/S':'TN'}</span></small>
+        </div>
+        <div class="actions">
+          <button class="btn-icon" title="Edit" onclick="openEditQuestion(${q.id})">✏️</button>
+          <button class="btn-icon" title="Delete" onclick="deleteQuestion(${q.id})">✕</button>
+        </div>
+      </div>`).join('');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function openEditQuestion(id){
+  const q = adminQuestions.find(x=>x.id===id);
+  if(!q) return;
+  document.getElementById('eq-id').value = q.id;
+  document.getElementById('eq-type').value = q.question_type || 'multiple';
+  document.getElementById('eq-question').value = q.question;
+  document.getElementById('eq-correct').value  = q.correct_answer;
+  document.getElementById('eq-w1').value = q.wrong1;
+  document.getElementById('eq-w2').value = q.wrong2 || '';
+  document.getElementById('eq-w3').value = q.wrong3 || '';
+  toggleWrongFields('eq');
+  openModal('modal-edit-q');
+}
+
+async function submitAddQuestion(){
+  try{
+    await api('POST','/questions',{
+      question: document.getElementById('aq-question').value.trim(),
+      correct_answer: document.getElementById('aq-correct').value.trim(),
+      wrong1: document.getElementById('aq-w1').value.trim(),
+      wrong2: document.getElementById('aq-w2').value.trim(),
+      wrong3: document.getElementById('aq-w3').value.trim(),
+    });
+    closeModal('modal-add-q');
+    toast('Câu added','success');
+    loadAdminQuestions();
+    ['aq-question','aq-correct','aq-w1','aq-w2','aq-w3'].forEach(id=>document.getElementById(id).value='');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function submitEditQuestion(){
+  try{
+    const id = document.getElementById('eq-id').value;
+    await api('PUT',`/questions/${id}`,{
+      question: document.getElementById('eq-question').value.trim(),
+      correct_answer: document.getElementById('eq-correct').value.trim(),
+      wrong1: document.getElementById('eq-w1').value.trim(),
+      wrong2: document.getElementById('eq-w2').value.trim(),
+      wrong3: document.getElementById('eq-w3').value.trim(),
+    });
+    closeModal('modal-edit-q');
+    toast('Câu updated','success');
+    loadAdminQuestions();
+  } catch(e){ toast(e.message,'error'); }
+}
+
+async function deleteQuestion(id){
+  showConfirm('Xóa câu hỏi?','Hành động này không thể hoàn tác.',async()=>{
+    try{ await api('DELETE',`/questions/${id}`); toast('Đã xóa','success'); loadAdminQuestions(); }
+    catch(e){ toast(e.message,'error'); }
+  });
+}
+
+function confirmDeleteAll(){
+  showConfirm('Xóa TẤT CẢ câu hỏi?','Tất cả câu hỏi sẽ bị xóa vĩnh viễn khỏi cơ sở dữ liệu.',async()=>{
+    try{ await api('DELETE','/questions/all'); toast('Đã xóa tất cả câu hỏi','success'); loadAdminQuestions(); }
+    catch(e){ toast(e.message,'error'); }
+  });
+}
+
+async function submitCSV(){
+  const input = document.getElementById('csv-file-input');
+  if(!input.files.length){ toast('Vui lòng chọn file CSV','error'); return; }
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  try{
+    const res = await api('POST','/questions/upload',fd,true);
+    closeModal('modal-upload-csv');
+    toast(`Đã nhập ${res.inserted} câu hỏi${res.errors.length?' ('+res.errors.length+' lỗi)':''}`, res.errors.length?'info':'success');
+    input.value='';
+    loadAdminQuestions();
+  } catch(e){ toast(e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN — FILES
+// ═══════════════════════════════════════════════════════════════════════════
+let adminFiles=[];
+async function loadAdminFiles(){
+  try{
+    adminFiles = await api('GET','/files');
+    const el = document.getElementById('admin-files-list');
+    if(!adminFiles.length){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">📂</div><p>Chưa có file nào được tải lên</p></div>';
+      return;
+    }
+    el.innerHTML = adminFiles.map(f=>`
+      <div class="file-item">
+        <div class="file-icon">${f.file_type==='pdf'?'📄':'🎬'}</div>
+        <div class="file-info">
+          <p>${escHtml(f.original_name)}</p>
+          <small><span class="badge badge-${f.file_type}">${f.file_type.toUpperCase()}</span></small>
+        </div>
+        <button class="btn-icon" title="Delete" onclick="deleteFile(${f.id})">✕</button>
+      </div>`).join('');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function triggerUpload(type){
+  document.getElementById(`upload-${type}-input`).click();
+}
+
+async function uploadFile(type, input){
+  if(!input.files.length) return;
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  try{
+    await api('POST',`/upload/${type}`,fd,true);
+    toast(`Đã tải lên ${type.toUpperCase()} thành công`,'success');
+    input.value='';
+    loadAdminFiles();
+  } catch(e){ toast(e.message,'error'); input.value=''; }
+}
+
+async function deleteFile(id){
+  showConfirm('Xóa file?','File sẽ bị xóa vĩnh viễn.',async()=>{
+    try{ await api('DELETE',`/files/${id}`); toast('Đã xóa','success'); loadAdminFiles(); }
+    catch(e){ toast(e.message,'error'); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════════════════════════════════
+async function startQuiz(){
+  try{
+    const questions = await api('GET','/questions/random');
+    if(!questions.length){ toast('Chưa có câu hỏi nào','error'); showScreen('home'); return; }
+    state.questions = questions;
+    state.currentQ  = 0;
+    state.score     = 0;
+    state.elapsed   = 0;
+    state.answered  = false;
+    if(state.timerInterval) clearInterval(state.timerInterval);
+    state.timerInterval = setInterval(()=>{
+      state.elapsed++;
+      const m=String(Math.floor(state.elapsed/60)).padStart(2,'0');
+      const s=String(state.elapsed%60).padStart(2,'0');
+      document.getElementById('quiz-timer').textContent=`${m}:${s}`;
+    },1000);
+    renderQuestion();
+  } catch(e){ toast(e.message,'error'); showScreen('home'); }
+}
+
+function renderQuestion(){
+  const q   = state.questions[state.currentQ];
+  const tot = state.questions.length;
+  document.getElementById('q-num').textContent       = state.currentQ+1;
+  document.getElementById('q-total').textContent     = tot;
+  document.getElementById('q-score-display').textContent = `Điểm: ${state.score}`;
+  document.getElementById('question-num-label').textContent = `Câu ${state.currentQ+1}`;
+  document.getElementById('question-text').textContent = q.question;
+  document.getElementById('progress-fill').style.width = `${(state.currentQ/tot)*100}%`;
+  state.answered = false;
+  const grid = document.getElementById('answers-grid');
+  const validAnswers = q.answers.filter(a => a && a.trim() !== '');
+  const isTF = validAnswers.length <= 2;
+  grid.style.gridTemplateColumns = isTF ? '1fr 1fr' : '';
+  grid.innerHTML = validAnswers.map(a=>`
+    <button class="answer-btn${isTF?' tf-btn':''}" onclick="selectAnswer(this,'${escAttr(a)}','${escAttr(q.correct_answer)}')">${escHtml(a)}</button>
+  `).join('');
+}
+
+function selectAnswer(btn, selected, correct){
+  if(state.answered) return;
+  state.answered = true;
+  document.querySelectorAll('.answer-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent.trim()===correct) b.classList.add('correct');
+  });
+  if(selected===correct){ state.score++; btn.classList.add('correct'); }
+  else btn.classList.add('wrong');
+
+  setTimeout(()=>{
+    state.currentQ++;
+    if(state.currentQ < state.questions.length) renderQuestion();
+    else finishQuiz();
+  }, 1000);
+}
+
+async function finishQuiz(){
+  clearInterval(state.timerInterval);
+  const score    = state.score;
+  const total    = state.questions.length;
+  const elapsed  = state.elapsed;
+  const win      = score > 7;
+
+  // Save score
+  try{ await api('POST','/highscores',{score,time_seconds:elapsed}); } catch(e){}
+
+  // Show result overlay
+  const overlay = document.createElement('div');
+  overlay.className='result-overlay';
+  overlay.innerHTML=`
+    <div class="result-card">
+      <div class="result-emoji">${win?'🎉':'😔'}</div>
+      <h2>${score}/${total}</h2>
+      <p>${win
+        ? `Congratulations! You scored <strong>${score} out trên ${total}</strong>.<br/>Your score has been saved to the leaderboard!`
+        : `You got <strong>${score} out trên ${total}</strong>.<br/>You need more than 7 to win. Keep practising!`
+      }</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="this.closest('.result-overlay').remove();showScreen('scores')">🏆 Bảng Xếp Hạng</button>
+        <button class="btn btn-secondary" onclick="this.closest('.result-overlay').remove();showScreen('library')">📖 Thư Viện</button>
+        <button class="btn btn-ghost" onclick="this.closest('.result-overlay').remove();showScreen('home')">🏠 Trang Chủ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCORES
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadScores(){
+  try{
+    const rows = await api('GET','/highscores');
+    const tbody = document.getElementById('scores-body');
+    if(!rows.length){
+      tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Chưa có điểm nào</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map((r,i)=>`
+      <tr class="score-row">
+        <td><div class="rank-badge rank-${i+1}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div></td>
+        <td style="font-weight:600">${escHtml(r.player_name)}</td>
+        <td><span class="score-val">${r.score}/10</span></td>
+        <td><span class="time-val">${fmtTime(r.time_seconds)}</span></td>
+      </tr>`).join('');
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function fmtTime(s){ const m=Math.floor(s/60); return `${m} phút ${s%60} giây`; }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIBRARY
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadLibrary(){
+  try{
+    const files = await api('GET','/files');
+    const pdfs  = files.filter(f=>f.file_type==='pdf');
+    const vids  = files.filter(f=>f.file_type==='video');
+    const pdfEl = document.getElementById('lib-pdf-grid');
+    const vidEl = document.getElementById('lib-video-grid');
+    pdfEl.innerHTML = pdfs.length
+      ? pdfs.map(f=>`<div class="lib-file-item" onclick="openViewer('pdf','${escAttr(f.filename)}','${escAttr(f.original_name)}')">
+          <div class="file-icon">📄</div><div class="file-name">${escHtml(f.original_name)}</div><span style="color:var(--muted);font-size:18px;">▶</span></div>`).join('')
+      : '<div class="empty-state"><div class="empty-icon">📭</div><p>No PDFs available</p></div>';
+    vidEl.innerHTML = vids.length
+      ? vids.map(f=>`<div class="lib-file-item" onclick="openViewer('video','${escAttr(f.filename)}','${escAttr(f.original_name)}')">
+          <div class="file-icon">🎬</div><div class="file-name">${escHtml(f.original_name)}</div><span style="color:var(--muted);font-size:18px;">▶</span></div>`).join('')
+      : '<div class="empty-state"><div class="empty-icon">📭</div><p>No videos available</p></div>';
+  } catch(e){ toast(e.message,'error'); }
+}
+
+function openViewer(type, filename, title){
+  document.getElementById('viewer-title').textContent = title;
+  const body = document.getElementById('viewer-body');
+  if(type==='pdf'){
+    body.innerHTML=`<iframe src="/uploads/pdf/${filename}" style="width:100%;height:100%;border-radius:8px;"></iframe>`;
+  } else {
+    body.innerHTML=`<video controls autoplay style="max-width:100%;max-height:100%;border-radius:8px;background:#000">
+      <source src="/uploads/video/${filename}"/>Your browser does not support video.</video>`;
+  }
+  document.getElementById('viewer-modal').classList.add('open');
+}
+
+function closeViewer(){
+  document.getElementById('viewer-modal').classList.remove('open');
+  document.getElementById('viewer-body').innerHTML='';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+let confirmCallback = null;
+function showConfirm(title, msg, cb){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  confirmCallback = cb;
+  openModal('modal-confirm');
+}
+document.getElementById('confirm-ok-btn').onclick = ()=>{
+  closeModal('modal-confirm');
+  if(confirmCallback) confirmCallback();
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleWrongFields(prefix){
+  const isTF = document.getElementById(`${prefix}-istf`).checked;
+  const extra = document.getElementById(`${prefix}-extra-wrongs`);
+  const correctEl = document.getElementById(`${prefix}-correct`);
+  const w1El = document.getElementById(`${prefix}-w1`);
+  if(isTF){
+    extra.style.display = 'none';
+    if(!correctEl.value) correctEl.value = 'Đúng';
+    if(!w1El.value) w1El.value = 'Sai';
+  } else {
+    extra.style.display = 'block';
+    if(correctEl.value==='Đúng'||correctEl.value==='Sai') correctEl.value='';
+    if(w1El.value==='Sai'||w1El.value==='Đúng') w1El.value='';
+  }
+}
+
+function escHtml(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+(function init(){
+  if(state.token && state.role){
+    if(state.role==='admin') showScreen('admin');
+    else {
+      document.getElementById('home-player-name').textContent = state.name||'Người chơi';
+      showScreen('home');
+    }
+  } else {
+    showScreen('auth');
+  }
+})();
+</script>
+</body>
+</html>
